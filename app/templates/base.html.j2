@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CS2 Monitor{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        {% if request.session.get("user_id") %}
+        <a href="/dashboard">仪表盘</a>
+        <a href="/watchlist">监控列表</a>
+        <a href="/alerts">告警</a>
+        <span style="float:right">{{ request.session.get("username") }} | <a href="/logout">登出</a></span>
+        {% endif %}
+    </nav>
+    <main>
+        {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+        {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
