@@ -1,0 +1,15 @@
+{% extends "base.html.j2" %}
+{% block title %}仪表盘 - CS2 Monitor{% endblock %}
+{% block content %}
+<h1>仪表盘</h1>
+<div class="stats">
+    <div class="stat-box">
+        <div class="label">监控饰品</div>
+        <div class="value">{{ watchlist_count }}</div>
+    </div>
+    <div class="stat-box">
+        <div class="label">今日告警</div>
+        <div class="value">{{ alert_count }}</div>
+    </div>
+</div>
+{% endblock %}

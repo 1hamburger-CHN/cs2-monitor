@@ -1,4 +1,4 @@
 """Route blueprints for the CS2 Monitor application."""
-from app.routes import auth, deps
+from app.routes import auth, deps, dashboard, watchlist
 
-__all__ = ["auth", "deps"]
+__all__ = ["auth", "deps", "dashboard", "watchlist"]
