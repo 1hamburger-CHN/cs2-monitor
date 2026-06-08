@@ -1,0 +1,16 @@
+crawler:
+  interval_seconds: 300
+  request_timeout: 15
+  max_concurrent: 5
+  user_agent: "CS2-Monitor/1.0"
+inventory:
+  interval_hours: 6
+  min_value_threshold: 10
+retention:
+  raw_days: 30
+  cleanup_hour: 2
+daily_report:
+  hour: 20
+notification:
+  retry_count: 1
+  retry_delay: 5

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS2 饰品监控 — 架构可视化</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d2991d;
+    --red: #f85149;
+    --purple: #a371f7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 24px;
+  }
+  h1 { font-size: 28px; margin-bottom: 8px; color: #f0f6fc; }
+  h2 { font-size: 20px; margin: 32px 0 16px; color: #f0f6fc; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin: 16px 0 8px; color: #e6edf3; }
+  .subtitle { color: #8b949e; margin-bottom: 32px; }
+
+  .arch-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .layer { display: flex; gap: 16px; align-items: center; }
+  .layer-label {
+    writing-mode: vertical-rl;
+    font-size: 12px;
+    color: #8b949e;
+    min-width: 24px;
+    text-align: center;
+  }
+  .box {
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .box.scheduler { border-color: #a371f7; color: #a371f7; }
+  .box.crawler { border-color: #58a6ff; color: #58a6ff; }
+  .box.storage { border-color: #3fb950; color: #3fb950; }
+  .box.alerter { border-color: #f85149; color: #f85149; }
+  .box.config { border-color: #d2991d; color: #d2991d; }
+  .box.external { border-color: #8b949e; color: #8b949e; border-style: dashed; }
+
+  .flow {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 13px;
+  }
+  .flow-step {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: #21262d;
+    border: 1px solid var(--border);
+  }
+  .flow-arrow { color: #484f58; font-size: 18px; }
+
+  .question-card {
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 8px;
+  }
+  .tag.p1 { background: #f8514922; color: #f85149; }
+  .tag.p2 { background: #d2991d22; color: #d2991d; }
+  .tag.p3 { background: #3fb95022; color: #3fb950; }
+  .tag.decision { background: #a371f722; color: #a371f7; }
+
+  .options { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+  .option {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #0d1117;
+    cursor: pointer;
+  }
+  .option .opt-label { font-weight: 600; margin-bottom: 4px; }
+  .option .opt-desc { font-size: 12px; color: #8b949e; }
+  .option.recommended { border-color: #3fb950; }
+  .option.recommended::after { content: " ⭐推荐"; font-size: 11px; color: #3fb950; }
+
+  .user-flow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 13px;
+  }
+  .user-step {
+    padding: 10px 18px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #1a1f2b, #21262d);
+    border: 1px solid #30363d;
+    text-align: center;
+  }
+  .user-arrow { color: #58a6ff; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<h1>🎮 CS2 饰品价格监控系统</h1>
+<p class="subtitle">设计可视化 · 2026-06-04 · 等待讨论确认</p>
+
+<h2>📐 系统架构</h2>
+<div class="arch-diagram">
+  <div class="layer">
+    <span class="layer-label">调度</span>
+    <span class="box scheduler">APScheduler<br>定时调度器</span>
+    <span style="color:#484f58;font-size:18px;">→</span>
+    <span class="box crawler">CSQAQ 爬虫</span>
+    <span class="box crawler">SteamDT 爬虫</span>
+    <span class="box crawler">DMarket 爬虫</span>
+    <span class="box crawler">库存爬虫</span>
+  </div>
+  <div class="layer">
+    <span class="layer-label">存储</span>
+    <span class="box storage">SQLite<br>价格快照 / 库存 / 监控列表</span>
+  </div>
+  <div class="layer">
+    <span class="layer-label">告警</span>
+    <span class="box alerter">规则引擎<br>三种监控模式</span>
+    <span style="color:#484f58;font-size:18px;">→</span>
+    <span class="box alerter">企微 Webhook<br>推送告警</span>
+  </div>
+  <div class="layer">
+    <span class="layer-label">配置</span>
+    <span class="box config">config.yaml<br>多用户配置</span>
+  </div>
+  <div class="layer">
+    <span class="layer-label">外部</span>
+    <span class="box external">Steam Inventory API</span>
+    <span class="box external">企微机器人</span>
+  </div>
+</div>
+
+<h2>🔄 数据流</h2>
+<div class="flow">
+  <span class="flow-step" style="border-color:#a371f7;color:#a371f7;">⏰ 定时器触发</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step" style="border-color:#58a6ff;color:#58a6ff;">🕷️ 爬虫拉取价格</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step" style="border-color:#3fb950;color:#3fb950;">💾 写入 SQLite</span>
+  <span class="flow-arrow">↘</span>
+  <span class="flow-step" style="border-color:#f85149;color:#f85149;">📊 规则对比</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step" style="border-color:#f85149;color:#f85149;">📨 企微推送</span>
+</div>
+<div style="margin-top:12px;padding:12px 24px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-size:13px;color:#8b949e;">
+  📦 库存刷新(低频 6h) → 写入库存表 → 自动加入监控列表
+</div>
+
+<h2>👥 多用户隔离</h2>
+<div class="arch-diagram">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:180px;padding:16px;border:1px solid #58a6ff;border-radius:8px;">
+      <strong style="color:#58a6ff;">用户 A</strong>
+      <div style="font-size:12px;color:#8b949e;margin-top:8px;">
+        Steam ID: xxx<br>
+        Webhook: URL-A<br>
+        监控列表: [M4A4, AK-47]<br>
+        告警 → 群 A
+      </div>
+    </div>
+    <div style="flex:1;min-width:180px;padding:16px;border:1px solid #3fb950;border-radius:8px;">
+      <strong style="color:#3fb950;">用户 B</strong>
+      <div style="font-size:12px;color:#8b949e;margin-top:8px;">
+        Steam ID: yyy<br>
+        Webhook: URL-B<br>
+        监控列表: [AWP, 爪子刀]<br>
+        告警 → 群 B
+      </div>
+    </div>
+    <div style="flex:1;min-width:180px;padding:16px;border:1px solid #d2991d;border-radius:8px;">
+      <strong style="color:#d2991d;">共享爬虫</strong>
+      <div style="font-size:12px;color:#8b949e;margin-top:8px;">
+        同一饰品只拉一次<br>
+        各自规则判定<br>
+        数据互相隔离
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>📋 待讨论事项 (6 项)</h2>
+
+<div class="question-card">
+  <span class="tag p1">Q1</span>
+  <span class="tag decision">需要决策</span>
+  <strong>各平台反爬策略与频率控制粒度</strong>
+  <p style="font-size:13px;color:#8b949e;margin-top:6px;">CSQAQ / SteamDT / DMarket 三个平台的反爬策略不同，频率限制也不同。</p>
+  <div class="options">
+    <div class="option recommended">
+      <div class="opt-label">先保守后激进</div>
+      <div class="opt-desc">默认 5min 间隔，逐步缩短。爬虫加随机延迟和 UA 轮换。被 ban 后自动降频。</div>
+    </div>
+    <div class="option">
+      <div class="opt-label">调研先行</div>
+      <div class="opt-desc">每个平台先手动测试，确定最佳频率后写死。初期不做自适应。</div>
+    </div>
+  </div>
+</div>
+
+<div class="question-card">
+  <span class="tag p1">Q2</span>
+  <span class="tag decision">需要决策</span>
+  <strong>饰品名称跨平台标准化</strong>
+  <p style="font-size:13px;color:#8b949e;margin-top:6px;">同一饰品在不同平台名称可能不同。</p>
+  <div class="options">
+    <div class="option recommended">
+      <div class="opt-label">别名映射表</div>
+      <div class="opt-desc">维护 CSV/JSON 文件，手动建立跨平台名称映射。每发现新别名追加。</div>
+    </div>
+    <div class="option">
+      <div class="opt-label">模糊匹配</div>
+      <div class="opt-desc">用相似度算法自动匹配，降低维护成本但可能出错。</div>
+    </div>
+  </div>
+</div>
+
+<div class="question-card">
+  <span class="tag p2">Q3</span>
+  <span class="tag decision">功能选择</span>
+  <strong>是否需要日/周汇总报告？</strong>
+  <div class="options">
+    <div class="option recommended">
+      <div class="opt-label">V1 跳过，V2 再加</div>
+      <div class="opt-desc">初期聚焦实时告警。汇总报告不阻塞核心功能。</div>
+    </div>
+    <div class="option">
+      <div class="opt-label">V1 包含简单日报</div>
+      <div class="opt-desc">每日一次推送持仓市值和涨跌。实现成本低。</div>
+    </div>
+  </div>
+</div>
+
+<div class="question-card">
+  <span class="tag p2">Q4</span>
+  <span class="tag decision">策略选择</span>
+  <strong>价格数据保留多久后清理？</strong>
+  <div class="options">
+    <div class="option recommended">
+      <div class="opt-label">保留 30 天原始 + 聚合历史</div>
+      <div class="opt-desc">30天内保留每条快照，超过30天只保留每小时均价。</div>
+    </div>
+    <div class="option">
+      <div class="opt-label">全量保留</div>
+      <div class="opt-desc">SQLite 单表百万行内性能尚可，一年约 10 万条/饰品。</div>
+    </div>
+  </div>
+</div>
+
+<div class="question-card">
+  <span class="tag p3">Q5</span>
+  <span class="tag decision">后续功能</span>
+  <strong>是否需要 Web 看板？</strong>
+  <div class="options">
+    <div class="option recommended">
+      <div class="opt-label">V1 纯企微交互，V2 Web 看板</div>
+      <div class="opt-desc">初期通过企微机器人指令交互。</div>
+    </div>
+    <div class="option">
+      <div class="opt-label">V1 包含极简 Web</div>
+      <div class="opt-desc">简单 FastAPI 页面显示当前价格和告警。</div>
+    </div>
+  </div>
+</div>
+
+<div class="question-card">
+  <span class="tag p3">Q6</span>
+  <span class="tag decision">用户界面</span>
+  <strong>用户如何配置监控、查看持仓？</strong>
+  <div class="options">
+    <div class="option recommended">
+      <div class="opt-label">企微机器人指令</div>
+      <div class="opt-desc">通过企微群内指令交互（/watch /list /alert）。用户已在企微。</div>
+    </div>
+    <div class="option">
+      <div class="opt-label">Web 管理页面</div>
+      <div class="opt-desc">独立 Web 页面配置管理。体验更好但需前端开发。</div>
+    </div>
+    <div class="option">
+      <div class="opt-label">配置文件 + 企微通知</div>
+      <div class="opt-desc">编辑 YAML 配置。初期最简单但用户体验差。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.option').forEach(opt => {
+  opt.addEventListener('click', function() {
+    const parent = this.parentElement;
+    parent.querySelectorAll('.option').forEach(o => o.style.borderColor = 'var(--border)');
+    this.style.borderColor = '#3fb950';
+  });
+});
+</script>
+
+</body>
+</html>
