@@ -1,0 +1,41 @@
+{% extends "base.html.j2" %}
+{% block title %}设置 - CS2 Monitor{% endblock %}
+{% block content %}
+<h1>设置</h1>
+
+<div class="card">
+    <form method="post">
+        <h3>通知配置</h3>
+        <p><label>Server酱 SendKey</label>
+        <input name="server_chan_key" placeholder="从 sct.ftqq.com 获取" style="width:100%">
+        <small>推送告警到个人微信。留空不修改。</small></p>
+
+        <h3>Steam 配置</h3>
+        <p><label>Steam ID (64位)</label>
+        <input name="steam_id" placeholder="如 7656119xxxxxxxx" value="{{ user.steam_id or '' }}" style="width:100%">
+        <small>读取公开库存。留空跳过库存监控。</small></p>
+
+        <p><label>Steam Web API Key</label>
+        <input name="steam_api_key" placeholder="从 steamcommunity.com/dev/apikey 获取" style="width:100%">
+        <small>库存为私密时需要。加密存储。</small></p>
+
+        <h3>数据源</h3>
+        <p><select name="preferred_source">
+            <option value="csqaq" {% if user.preferred_source == 'csqaq' %}selected{% endif %}>CSQAQ</option>
+            <option value="steamdt" {% if user.preferred_source == 'steamdt' %}selected{% endif %}>SteamDT</option>
+        </select>
+        <small> 首选源挂了自动切备选。</small></p>
+
+        <p><button type="submit">保存设置</button></p>
+    </form>
+</div>
+
+<div class="card">
+    <h3>获取 Server酱 SendKey</h3>
+    <ol>
+        <li>打开 <a href="https://sct.ftqq.com" target="_blank">sct.ftqq.com</a></li>
+        <li>微信扫码登录 → Key&amp;API → 复制 SendKey</li>
+        <li>粘贴到上方输入框</li>
+    </ol>
+</div>
+{% endblock %}

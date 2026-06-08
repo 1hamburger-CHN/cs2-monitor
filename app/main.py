@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.templating import Jinja2Templates
 from app.config import settings
-from app.routes import auth, dashboard, watchlist
+from app.routes import auth, dashboard, watchlist, user_settings
 
 
 @asynccontextmanager
@@ -18,3 +18,4 @@ app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 app.include_router(auth.router, tags=["auth"])
 app.include_router(dashboard.router, tags=["dashboard"])
 app.include_router(watchlist.router, tags=["watchlist"])
+app.include_router(user_settings.router, tags=["settings"])
