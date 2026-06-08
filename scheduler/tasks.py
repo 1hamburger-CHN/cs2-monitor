@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from app.database import AsyncSessionLocal
 from app.models import WatchlistItem, User, PriceSnapshot, AlertLog
-from scheduler.crawlers import csqaq, steamdt
+from scheduler.crawlers import csqaq
 from scheduler.alerter import check_mode_1, check_mode_2
 from scheduler.notifier import send_notification, format_price_alert
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 async def run_price_crawl():
-    """Crawl prices for all monitored items with fallback."""
+    """Crawl prices via CSQAQ official API for all monitored items."""
     async with AsyncSessionLocal() as db:
         result = await db.execute(
             select(WatchlistItem.market_hash_name)
@@ -21,25 +21,23 @@ async def run_price_crawl():
             .distinct()
         )
         all_items = [row[0] for row in result.all()]
-        logger.info(f"Crawling {len(all_items)} items")
+        if not all_items:
+            logger.info("No items to crawl")
+            return
+        logger.info(f"Crawling {len(all_items)} items via CSQAQ API")
 
-        # Primary: CSQAQ
-        csqaq_prices = await csqaq.fetch_prices(all_items)
-        # Fallback: failed items -> SteamDT
-        failed = [n for n, p in csqaq_prices.items() if p is None]
-        steamdt_prices = await steamdt.fetch_prices(failed) if failed else {}
+        prices = await csqaq.fetch_prices(all_items)
 
         now = datetime.now(timezone.utc)
         snapshots = []
         for name in all_items:
-            price = csqaq_prices.get(name)
-            platform = "csqaq"
-            if price is None:
-                price = steamdt_prices.get(name)
-                platform = "steamdt"
-            if price is not None:
+            data = prices.get(name)
+            if data and data.get("buff_sell"):
                 snapshots.append(PriceSnapshot(
-                    market_hash_name=name, platform=platform, price=price, timestamp=now
+                    market_hash_name=name,
+                    platform="csqaq",
+                    price=data["buff_sell"],
+                    timestamp=now,
                 ))
 
         if snapshots:
