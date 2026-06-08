@@ -26,7 +26,7 @@
 
 ## 待做
 
-1. **前端重写**：Vue 3 + Vite + PWA（Web Push 通知）
+1. **前端重写**：Vue 3 + Vite + PWA + anime.js (Web Push 通知 + 动画)
 2. **FastAPI 改纯 API**：删除 Jinja2 模板
 3. **集成测试修复**
 4. **CSQAQ 首次缓存预填充**（减少限速等待）
@@ -40,7 +40,8 @@
 | 通知 | 自建 PWA Web Push（不用第三方） |
 | 数据库 | MySQL |
 | 图片 | CSQAQ CDN |
-| 前端 | Vue 3 PWA（替代 Jinja2） |
+| 前端 | Vue 3 PWA + anime.js（替代 Jinja2） |
+| 动画 | anime.js（价格跳动、列表入场、告警脉冲） |
 
 ## 启动
 
