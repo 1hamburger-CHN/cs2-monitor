@@ -106,6 +106,7 @@ async def fetch_price(
             "yyyp_sell": detail.get("yyyp_sell_price"),
             "c5_sell": detail.get("c5_sell_price"),
             "steam_sell": detail.get("steam_sell_price"),
+            "img_url": detail.get("img"),
         }
 
 
