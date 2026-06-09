@@ -30,6 +30,11 @@ class ItemMapper:
                 en = item.get("market_hash_name", "")
                 if cn and en and en in self._by_name:
                     self._cn_names[cn] = en
+        # Build reverse index: English name -> Chinese name
+        self._en_to_cn: dict[str, str] = {}
+        for cn_name, en_name in self._cn_names.items():
+            if en_name not in self._en_to_cn:
+                self._en_to_cn[en_name] = cn_name
         self._loaded = True
 
     def get(self, market_hash_name: str) -> Optional[dict]:
@@ -79,7 +84,9 @@ class ItemMapper:
         sorted_results = sorted(matched.items(), key=lambda x: x[1], reverse=True)
         results = []
         for name, _ in sorted_results[:limit]:
-            results.append({"market_hash_name": name, **self._by_name[name]})
+            item = {"market_hash_name": name, **self._by_name[name]}
+            item["cn_name"] = self._en_to_cn.get(name, name)
+            results.append(item)
         return results
 
     @property

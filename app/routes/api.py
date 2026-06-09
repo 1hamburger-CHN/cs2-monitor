@@ -50,8 +50,10 @@ class UpdateWatchlistBody(BaseModel):
     enabled: bool | None = None
 
 class SaveSettingsBody(BaseModel):
+    server_chan_key: str | None = None
     steam_id: str | None = None
     steam_api_key: str | None = None
+    preferred_source: str | None = None
 
 class PushSubscriptionBody(BaseModel):
     endpoint: str
@@ -276,6 +278,7 @@ async def api_search_items(q: str = "", limit: int = 20):
     return [
         {
             "market_hash_name": r["market_hash_name"],
+            "cn_name": r.get("cn_name", r["market_hash_name"]),
             "weapon": r.get("weapon", ""),
             "wear_cn": r.get("wear_cn", ""),
             "img_url": _get_img_url(r["market_hash_name"]),
@@ -318,17 +321,26 @@ async def api_alerts(user: User = Depends(api_login_required), db: AsyncSession 
 
 @router.get("/settings")
 async def api_get_settings(user: User = Depends(api_login_required)):
+    masked = (user.server_chan_key_encrypted or "")[:8]
+    if masked:
+        masked += "****"
     return {
+        "server_chan_key_masked": masked,
         "steam_id": user.steam_id or "",
+        "preferred_source": user.preferred_source or "csqaq",
     }
 
 
 @router.put("/settings")
 async def api_save_settings(body: SaveSettingsBody, user: User = Depends(api_login_required), db: AsyncSession = Depends(get_db)):
+    if body.server_chan_key:
+        user.server_chan_key_encrypted = encrypt_value(body.server_chan_key.strip())
     if body.steam_id is not None:
         user.steam_id = body.steam_id.strip()
     if body.steam_api_key:
         user.steam_api_key_encrypted = encrypt_value(body.steam_api_key.strip())
+    if body.preferred_source:
+        user.preferred_source = body.preferred_source
     await db.commit()
     return {"ok": True}
 

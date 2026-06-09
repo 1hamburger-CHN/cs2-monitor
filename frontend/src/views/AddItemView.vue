@@ -7,6 +7,7 @@ import SearchBar from '../components/SearchBar.vue'
 import WatchlistItem from '../components/WatchlistItem.vue'
 
 interface SearchResult {
+  cn_name?: string
   market_hash_name: string
   weapon: string
   wear_cn: string
@@ -55,7 +56,7 @@ async function addItem(itemName: string) {
       <div v-if="error" class="alert-error">{{ error }}</div>
       <WatchlistItem
         v-for="item in results" :key="item.market_hash_name"
-        :name="item.market_hash_name"
+        :name="item.cn_name || item.market_hash_name"
         :weapon="item.weapon"
         :wear-cn="item.wear_cn"
         :img-url="item.img_url ?? undefined"
