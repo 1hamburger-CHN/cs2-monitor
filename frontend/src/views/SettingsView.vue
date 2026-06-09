@@ -7,18 +7,14 @@ import AppLayout from '../components/AppLayout.vue'
 import SettingsRow from '../components/SettingsRow.vue'
 
 interface UserSettings {
-  server_chan_key_masked: string
   steam_id: string
-  preferred_source: string
 }
 
 const router = useRouter()
 const auth = useAuthStore()
-const settings = ref<UserSettings>({ server_chan_key_masked: '', steam_id: '', preferred_source: 'csqaq' })
-const serverChanKey = ref('')
+const settings = ref<UserSettings>({ steam_id: '' })
 const steamId = ref('')
 const steamApiKey = ref('')
-const preferredSource = ref('csqaq')
 const saving = ref(false)
 const message = ref('')
 
@@ -26,7 +22,6 @@ async function load() {
   try {
     settings.value = await api.get<UserSettings>('/settings')
     steamId.value = settings.value.steam_id
-    preferredSource.value = settings.value.preferred_source
   } catch (e) {
     console.error(e)
   }
@@ -37,13 +32,11 @@ async function save() {
   message.value = ''
   try {
     await api.put('/settings', {
-      server_chan_key: serverChanKey.value || undefined,
       steam_id: steamId.value,
       steam_api_key: steamApiKey.value || undefined,
-      preferred_source: preferredSource.value,
+
     })
     message.value = '设置已保存'
-    serverChanKey.value = ''
     steamApiKey.value = ''
   } catch (e: any) {
     message.value = e.message || '保存失败'
@@ -64,11 +57,6 @@ onMounted(load)
   <AppLayout>
     <div class="header"><div class="title">设置</div></div>
     <div class="section">
-      <div class="section-title">通知</div>
-      <SettingsRow label="Server酱 SendKey" :value="settings.server_chan_key_masked || '未设置'" />
-      <input v-model="serverChanKey" type="text" placeholder="新 SendKey（留空不修改）" />
-    </div>
-    <div class="section">
       <div class="section-title">Steam 配置</div>
       <SettingsRow label="Steam ID">
         <input v-model="steamId" type="text" placeholder="7656119xxxxxxxx" />
@@ -78,13 +66,10 @@ onMounted(load)
     <div class="section">
       <div class="section-title">价格数据源</div>
       <SettingsRow label="首选数据源">
-        <select v-model="preferredSource">
-          <option value="csqaq">CSQAQ</option>
-          <option value="steamdt">SteamDT</option>
-        </select>
+        CSQAQ
       </SettingsRow>
       <div class="status">
-        <span class="dot"></span> {{ preferredSource === 'csqaq' ? 'CSQAQ' : 'SteamDT' }} · 已连接
+        <span class="dot"></span> CSQAQ · 已连接
       </div>
     </div>
     <div v-if="message" class="message" :class="{ success: message.includes('已保存') }">{{ message }}</div>
