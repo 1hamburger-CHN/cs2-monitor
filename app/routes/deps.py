@@ -20,3 +20,12 @@ async def login_required(request: Request, db: AsyncSession = Depends(get_db)):
     if user is None:
         return RedirectResponse(url="/login", status_code=302)
     return user
+
+
+async def api_login_required(request: Request, db: AsyncSession = Depends(get_db)):
+    """API version — returns 401 JSON instead of 302 redirect."""
+    user = await get_current_user(request, db)
+    if user is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return user

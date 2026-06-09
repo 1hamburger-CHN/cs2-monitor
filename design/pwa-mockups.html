@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CS2 Monitor — PWA 设计方案</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--accent:#58a6ff;--green:#3fb950;--red:#f85149;--orange:#d2991d}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--border);gap:12px;font-size:14px}
+.bar select{padding:8px 12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:14px}
+.bar .screen-btns{display:flex;gap:6px}
+.bar .screen-btns button{padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:12px;cursor:pointer}
+.bar .screen-btns button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.phone{width:390px;height:844px;margin:16px auto;background:var(--bg);border:2px solid var(--border);border-radius:40px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.phone-inner{height:calc(100% - 44px);margin-top:44px;overflow-y:auto;padding:0 0 20px}
+.phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:30px;background:#000;border-radius:0 0 20px 20px;z-index:10}
+.phone-status{position:absolute;top:14px;left:32px;right:32px;display:flex;justify-content:space-between;color:#fff;font-size:12px;z-index:11;font-weight:600}
+.phone-bar{position:absolute;bottom:0;left:0;right:0;height:34px;background:#000;border-radius:0 0 36px 36px}
+.top{background:var(--card);padding:24px 20px 20px;text-align:center;border-bottom:1px solid var(--border)}
+.top .logo{font-size:28px;margin-bottom:8px}
+.top .title{font-size:20px;font-weight:700;margin-bottom:4px}
+.top .subtitle{font-size:12px;color:#8b949e}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--card)}
+.tab{flex:1;padding:14px 0;text-align:center;font-size:13px;color:#8b949e;border-bottom:2px solid transparent;cursor:pointer;transition:.2s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.list{padding:0 16px}
+.item{display:flex;align-items:center;padding:16px 0;border-bottom:1px solid var(--border);gap:12px}
+.item-img{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#1a1f2b,#21262d);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--border)}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{font-size:11px;color:#8b949e;margin-top:2px}
+.item-price{text-align:right;flex-shrink:0}
+.item-price .current{font-size:16px;font-weight:700}
+.item-price .target{font-size:11px;color:#8b949e}
+.item-price.down .current{color:var(--red)}
+.item-price.up .current{color:var(--green)}
+.badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-buy{background:#3fb95022;color:var(--green)}
+.badge-cost{background:#d2991d22;color:var(--orange)}
+.badge-trigger{background:#f8514922;color:var(--red)}
+.stats{display:flex;gap:12px;padding:16px}
+.stat{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.stat .num{font-size:26px;font-weight:700;margin-bottom:4px}
+.stat .label{font-size:11px;color:#8b949e}
+.stat .num.up{color:var(--green)}
+.stat .num.down{color:var(--red)}
+.alert-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin:0 16px 12px}
+.alert-card .time{font-size:11px;color:#8b949e;margin-bottom:8px}
+.alert-card .msg{font-size:14px;line-height:1.6}
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin:0 16px 16px}
+.form-card input,.form-card select{padding:10px 12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:14px;width:100%;margin-top:8px}
+.form-card label{font-size:13px;color:#8b949e}
+.form-card .row{display:flex;gap:8px;margin-top:8px}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.price-row{display:flex;gap:10px;padding:16px;overflow-x:auto}
+.price-chip{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;text-align:center;min-width:72px}
+.price-chip .p{font-size:16px;font-weight:700}
+.price-chip .src{font-size:10px;color:#8b949e;margin-top:2px}
+.nav{display:flex;justify-content:space-around;padding:12px 0;background:var(--card);border-top:1px solid var(--border)}
+.nav .nav-item{text-align:center;font-size:11px;color:#8b949e;cursor:pointer;transition:.2s}
+.nav .nav-item.active{color:var(--accent)}
+.nav .nav-item .icon{font-size:20px;margin-bottom:2px}
+.section-title{font-size:14px;font-weight:600;padding:16px 16px 8px;color:#8b949e;text-transform:uppercase;letter-spacing:.5px}
+.empty{text-align:center;padding:48px 16px;color:#8b949e}
+.empty .icon{font-size:40px;margin-bottom:12px}
+/* Theme: CS2 Gold */
+.theme-cs2 .top{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+.theme-cs2 .tab.active{color:#f0a500;border-bottom-color:#f0a500}
+.theme-cs2 .btn-primary{background:linear-gradient(135deg,#f0a500,#e09000);color:#1a1a2e}
+.theme-cs2 .badge-buy{background:#f0a50022;color:#f0a500}
+.theme-cs2 .stat .num{color:#f0a500}
+.theme-cs2 .nav .nav-item.active{color:#f0a500}
+/* Theme: Clean White */
+.theme-clean .phone{background:#f8f9fa;border-color:#e5e5e5}
+.theme-clean{--bg:#f8f9fa;--card:#fff;--border:#e5e5e5;--text:#1a1a1a}
+.theme-clean .phone-bar,.theme-clean .phone-notch{background:#333}
+.theme-clean .top{background:#fff;border-bottom:1px solid #e5e5e5}
+.theme-clean .top .subtitle{color:#888}
+.theme-clean .item-img{background:#f0f0f0;border-color:#e5e5e5}
+.theme-clean .tab.active{color:#000;border-bottom-color:#000}
+.theme-clean .btn-primary{background:#000;color:#fff}
+.theme-clean .nav{background:#fff;border-top:1px solid #e5e5e5}
+.theme-clean .nav .nav-item.active{color:#000}
+</style>
+</head>
+<body>
+<div class="bar">
+  <span style="font-weight:700">CS2 Monitor · PWA 设计稿</span>
+  <select id="theme" onchange="switchTheme()">
+    <option value="cs2">🎨 暗金 CS2</option>
+    <option value="dark">🌙 暗色科技</option>
+    <option value="clean">☀️ 极简白</option>
+  </select>
+  <div class="screen-btns" id="screenBtns">
+    <button class="active" onclick="show('dashboard');highlight(event)">首页</button>
+    <button onclick="show('add');highlight(event)">添加</button>
+    <button onclick="show('detail');highlight(event)">详情</button>
+    <button onclick="show('alerts');highlight(event)">告警</button>
+  </div>
+</div>
+
+<div class="phone" id="phone">
+  <div class="phone-notch"></div>
+  <div class="phone-status"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="phone-inner" id="content"></div>
+  <div class="phone-bar"></div>
+</div>
+
+<script>
+function highlight(e){document.querySelectorAll('#screenBtns button').forEach(b=>b.classList.remove('active'));e.target.classList.add('active')}
+
+const t='theme-cs2',c='theme-clean';
+const themes={cs2:t,dark:'',clean:c};
+function switchTheme(){const p=document.getElementById('phone');Object.values(themes).forEach(x=>x&&p.classList.remove(x));const v=themes[document.getElementById('theme').value];if(v)p.classList.add(v)}
+document.getElementById('phone').classList.add(t);
+
+const screens={
+dashboard:`
+<div class="top"><div class="logo">🔫</div><div class="title">CS2 Monitor</div><div class="subtitle">价格刷新 · 刚刚</div></div>
+<div class="stats">
+  <div class="stat"><div class="num">12</div><div class="label">监控饰品</div></div>
+  <div class="stat"><div class="num up">¥48,520</div><div class="label">持仓总值</div></div>
+  <div class="stat"><div class="num down">3</div><div class="label">今日告警</div></div>
+</div>
+<div class="section-title">监控列表</div>
+<div class="list">
+  <div class="item" onclick="show('detail')">
+    <div class="item-img">🔴</div>
+    <div class="item-info"><div class="item-name">AK-47 | 红线 (久经沙场)</div><div class="item-meta">BUFF · 5分钟前</div></div>
+    <div class="item-price down"><div class="current">¥85.5</div><div class="target">目标 ¥80</div></div>
+  </div>
+  <div class="item">
+    <div class="item-img">🟠</div>
+    <div class="item-info"><div class="item-name">AWP | 二西莫夫 (略有磨损)</div><div class="item-meta">BUFF · 5分钟前</div></div>
+    <div class="item-price"><div class="current">¥320</div><div class="target">目标 ¥300</div></div>
+  </div>
+  <div class="item">
+    <div class="item-img">🟢</div>
+    <div class="item-info"><div class="item-name">M4A4 | 龙王 (崭新出厂)</div><div class="item-meta">YUYP · 5分钟前</div></div>
+    <div class="item-price up"><div class="current">¥156</div><div class="target">目标 ¥140</div></div>
+  </div>
+  <div class="item">
+    <div class="item-img">🔵</div>
+    <div class="item-info"><div class="item-name">沙漠之鹰 | 印花集 (崭新出厂)</div><div class="item-meta">BUFF · 5分钟前</div></div>
+    <div class="item-price"><div class="current">¥245</div><div class="target">目标 ¥230</div></div>
+  </div>
+</div>
+<div class="nav">
+  <div class="nav-item active"><div class="icon">📊</div>首页</div>
+  <div class="nav-item"><div class="icon">➕</div>添加</div>
+  <div class="nav-item"><div class="icon">🔔</div>告警</div>
+  <div class="nav-item"><div class="icon">⚙️</div>设置</div>
+</div>`,
+
+add:`
+<div class="top"><div class="logo">➕</div><div class="title">添加监控</div><div class="subtitle">搜索饰品名加入监控列表</div></div>
+<div class="form-card" style="margin-top:16px">
+  <input placeholder="如 AK-47 红线 久经" value="红线" style="margin:0">
+  <div style="margin-top:10px;font-size:12px;color:var(--green)">找到 13763 件饰品中匹配</div>
+</div>
+<div class="list">
+  <div class="item"><div class="item-img">🔴</div><div class="item-info"><div class="item-name">AK-47 | 红线 (久经沙场)</div><div class="item-meta">Classified · 0.15 - 0.38</div></div><span class="badge badge-buy">添加</span></div>
+  <div class="item"><div class="item-img">🔴</div><div class="item-info"><div class="item-name">AK-47 | 红线 (崭新出厂)</div><div class="item-meta">Classified · 0.00 - 0.07</div></div><span class="badge badge-buy">添加</span></div>
+  <div class="item"><div class="item-img">🔴</div><div class="item-info"><div class="item-name">AK-47 | 红线 (略有磨损)</div><div class="item-meta">Classified · 0.07 - 0.15</div></div><span class="badge badge-buy">添加</span></div>
+  <div class="item"><div class="item-img">🔴</div><div class="item-info"><div class="item-name">AK-47 | 红线 (破损不堪)</div><div class="item-meta">Classified · 0.38 - 0.45</div></div><span class="badge badge-buy">添加</span></div>
+  <div class="item"><div class="item-img">🔴</div><div class="item-info"><div class="item-name">AK-47 | 红线 (战痕累累)</div><div class="item-meta">Classified · 0.45 - 0.70</div></div><span class="badge badge-buy">添加</span></div>
+</div>`,
+
+detail:`
+<div class="top"><div class="logo">📊</div><div class="title">AK-47 | 红线</div><div class="subtitle">久经沙场 · Classified</div></div>
+<div class="price-row">
+  <div class="price-chip"><div class="p" style="color:var(--green)">¥85.5</div><div class="src">BUFF</div></div>
+  <div class="price-chip"><div class="p">¥84.0</div><div class="src">悠悠有品</div></div>
+  <div class="price-chip"><div class="p">¥83.5</div><div class="src">C5</div></div>
+  <div class="price-chip"><div class="p">$11.3</div><div class="src">Steam</div></div>
+</div>
+<div class="stats">
+  <div class="stat"><div class="num" style="color:var(--green)">¥80</div><div class="label">目标价</div></div>
+  <div class="stat"><div class="num" style="color:var(--red)">-6.5%</div><div class="label">偏离</div></div>
+  <div class="stat"><div class="num">476</div><div class="label">BUFF在售</div></div>
+</div>
+<div class="form-card">
+  <label>目标价</label><input type="number" value="80" step="0.01">
+  <label>监控模式</label><select><option>盯价（小于等于目标价触发）</option><option>持仓（涨跌幅触发）</option></select>
+  <div class="row" style="margin-top:12px"><button class="btn btn-primary" style="flex:1">保存</button><button class="btn btn-ghost" style="flex:1">删除</button></div>
+</div>`,
+
+alerts:`
+<div class="top"><div class="logo">🔔</div><div class="title">告警中心</div><div class="subtitle">今日 3 条 · 历史 27 条</div></div>
+<div class="alert-card">
+  <div class="time">14:32 · 刚刚</div>
+  <div class="msg">🔴 <b>AK-47 | 红线 (久经沙场)</b><br>当前 ¥85.50 → 目标 ¥80.00<br>跌幅 6.5% · BUFF</div>
+  <div style="margin-top:8px"><span class="badge badge-trigger">触发告警</span></div>
+</div>
+<div class="alert-card">
+  <div class="time">11:05 · 3小时前</div>
+  <div class="msg">🟢 <b>M4A4 | 龙王 (崭新出厂)</b><br>当前 ¥138 → 目标 ¥140<br>接近目标 · 悠悠有品</div>
+</div>
+<div class="alert-card">
+  <div class="time">09:20 · 今天</div>
+  <div class="msg">📊 <b>持仓日报</b><br>总市值 ¥48,520 (+2.3%)<br>AK-47 红线 +¥2.5 · AWP 二西莫夫 -¥5.0</div>
+</div>`
+};
+
+function show(s){document.getElementById('content').innerHTML=screens[s]||screens.dashboard}
+show('dashboard');
+</script>
+</body>
+</html>

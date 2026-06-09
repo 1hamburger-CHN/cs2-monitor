@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#020617"/>
+  <rect x="16" y="16" width="480" height="480" rx="84" fill="none" stroke="#1E293B" stroke-width="6"/>
+  <text x="256" y="180" text-anchor="middle" fill="#22C55E" font-family="monospace" font-size="140" font-weight="bold">CS2</text>
+  <text x="256" y="310" text-anchor="middle" fill="#F8FAFC" font-family="monospace" font-size="60" font-weight="bold">MONITOR</text>
+  <rect x="156" y="350" width="200" height="4" rx="2" fill="#3B82F6"/>
+  <text x="256" y="420" text-anchor="middle" fill="#64748B" font-family="monospace" font-size="36">价格监控</text>
+</svg>

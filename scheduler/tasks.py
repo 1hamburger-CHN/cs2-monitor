@@ -1,7 +1,9 @@
 """Scheduled task orchestration — crawl, alert, cleanup, daily report."""
 import asyncio
+import json
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from sqlalchemy import select
 from app.database import AsyncSessionLocal
 from app.models import WatchlistItem, User, PriceSnapshot, AlertLog
@@ -10,6 +12,22 @@ from scheduler.alerter import check_mode_1, check_mode_2
 from scheduler.notifier import send_notification, format_price_alert
 
 logger = logging.getLogger(__name__)
+IMG_CACHE_FILE = Path("data/img_cache.json")
+
+
+def _update_img_cache(prices: dict):
+    """Persist img_url from CSQAQ results to JSON cache."""
+    try:
+        cache = {}
+        if IMG_CACHE_FILE.exists():
+            cache = json.loads(IMG_CACHE_FILE.read_text())
+        for name, data in prices.items():
+            if data and data.get("img_url"):
+                cache[name] = data["img_url"]
+        IMG_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        IMG_CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False, indent=2))
+    except Exception as e:
+        logger.warning(f"Failed to update img cache: {e}")
 
 
 async def run_price_crawl():
@@ -44,6 +62,9 @@ async def run_price_crawl():
             db.add_all(snapshots)
             await db.commit()
             logger.info(f"Saved {len(snapshots)} snapshots")
+
+        # Update image URL cache
+        _update_img_cache(prices)
 
     await run_alert_check()
 
