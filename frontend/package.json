@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "npm run generate-icons && vue-tsc -b && vite build",
     "preview": "vite preview",
-    "generate-icons": "node scripts/generate-icons.js"
+    "generate-icons": "node scripts/generate-icons.cjs"
   },
   "dependencies": {
     "animejs": "^3.2.2",
