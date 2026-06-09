@@ -5,11 +5,7 @@ import BottomNav from './BottomNav.vue'
 <template>
   <div class="app-shell">
     <main class="content">
-      <router-view v-slot="{ Component }">
-        <transition name="view" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+      <slot />
     </main>
     <BottomNav />
   </div>
