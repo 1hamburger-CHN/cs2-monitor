@@ -4,11 +4,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ ./app/
+COPY scheduler/ ./scheduler/
 COPY scripts/ ./scripts/
 COPY migrations/ ./migrations/
 COPY data/ ./data/
 COPY alembic.ini .
 COPY app/static/spa/ ./app/static/spa/
+RUN mkdir -p /app/certs
 ENV PYTHONPATH=/app
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
