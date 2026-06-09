@@ -14,6 +14,24 @@ CSQAQ_TOKEN = os.environ.get("CSQAQ_API_TOKEN", "")
 CACHE_FILE = Path("data/csqaq_id_cache.json")
 
 _id_cache: dict[str, int] = {}
+_id_lookup: dict[str, int] = {}  # market_hash_name -> CSQAQ ID
+
+ID_LOOKUP_FILE = Path("data/csqaq_ids.json")
+
+
+def _load_lookup():
+    """Load the full CSQAQ ID mapping file (market_hash_name -> id)."""
+    global _id_lookup
+    if ID_LOOKUP_FILE.exists():
+        try:
+            data = json.loads(ID_LOOKUP_FILE.read_text(encoding="utf-8"))
+            for item in data:
+                name = item.get("market_hash_name", "")
+                if name:
+                    _id_lookup[name] = int(item["id"])
+            logger.info(f"Loaded {len(_id_lookup)} CSQAQ IDs from lookup file")
+        except Exception as e:
+            logger.warning(f"Failed to load ID lookup: {e}")
 
 
 def _load_cache():
@@ -29,6 +47,7 @@ def _save_cache():
         json.dump(_id_cache, f)
 
 
+_load_lookup()
 _load_cache()
 
 
@@ -71,19 +90,36 @@ async def resolve_id(client: httpx.AsyncClient, market_hash_name: str) -> Option
     if market_hash_name in _id_cache:
         return _id_cache[market_hash_name]
 
-    weapon = market_hash_name.split(" | ")[0] if " | " in market_hash_name else market_hash_name
-    suggestions = await _search_suggest(client, weapon)
-    if not suggestions:
-        return None
+    # Try full ID lookup first (fast path)
+    if market_hash_name in _id_lookup:
+        cid = _id_lookup[market_hash_name]
+        _id_cache[market_hash_name] = cid
+        return cid
 
-    for s in suggestions[:15]:
-        cid = int(s["id"])
-        detail = await _get_detail(client, cid)
-        if detail and detail.get("market_hash_name") == market_hash_name:
-            _id_cache[market_hash_name] = cid
-            _save_cache()
-            return cid
-        await asyncio.sleep(0.3)  # Rate limit spacing
+    # Fall back to search API (slow path)
+    weapon = market_hash_name.split(" | ")[0] if " | " in market_hash_name else market_hash_name
+
+    from app.item_mapper import item_mapper
+    info = item_mapper.get(market_hash_name)
+    wear_cn = info.get("wear_cn", "") if info else ""
+
+    queries = []
+    if wear_cn:
+        queries.append(f"{weapon} {wear_cn}")
+    queries.append(weapon)
+
+    for query in queries:
+        suggestions = await _search_suggest(client, query)
+        if not suggestions:
+            continue
+        for s in suggestions:
+            cid = int(s["id"])
+            detail = await _get_detail(client, cid)
+            if detail and detail.get("market_hash_name") == market_hash_name:
+                _id_cache[market_hash_name] = cid
+                _save_cache()
+                return cid
+            await asyncio.sleep(0.3)
 
     return None
 
