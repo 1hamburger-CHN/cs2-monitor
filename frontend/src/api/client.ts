@@ -20,7 +20,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   })
   if (res.status === 401) {
-    window.location.href = '/login'
     throw new ApiError(401, 'Unauthorized')
   }
   if (!res.ok) {
