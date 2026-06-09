@@ -28,22 +28,8 @@ spa_dir = Path(__file__).parent / "static" / "spa"
 spa_built = spa_dir.is_dir()
 
 if spa_built:
-    # Static assets (JS/CSS/images)
-    app.mount("/assets", StaticFiles(directory=str(spa_dir / "assets")), name="spa_assets")
-
-    # PWA manifest + service worker
-    @app.get("/manifest.json", include_in_schema=False)
-    async def manifest():
-        return FileResponse(spa_dir / "manifest.json")
-
-    @app.get("/sw.js", include_in_schema=False)
-    async def sw():
-        return FileResponse(spa_dir / "sw.js", media_type="application/javascript")
-
-    # SPA catch-all for all non-API routes
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def spa_root(full_path: str):
-        return FileResponse(spa_dir / "index.html")
+    # Mount SPA static files (handles MIME types correctly)
+    app.mount("/", StaticFiles(directory=str(spa_dir), html=True), name="spa")
 
 else:
     # Fallback: Jinja2 pages (when SPA not built)
