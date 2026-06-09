@@ -7,3 +7,4 @@ dist/
 build/
 data/img_cache.json
 data/push_subscriptions.json
+.gstack/
