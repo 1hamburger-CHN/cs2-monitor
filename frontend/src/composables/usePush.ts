@@ -15,7 +15,7 @@ async function subscribe() {
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: urlBase64ToUint8Array(
-      'BEl62i2Y6wJFhBzE0K_fMMy5H5GEo3qRJGpTGkFFaGqHfR8XXaLuOXJkPBjxKjTPhxx5QcDOy2Y4vgVpOIQxWxg'
+      'BPdli3Hrz20t_-ORRfRnU85sigc4799jxHAWQYwibDENBKiQ0mu6TqztcHQmnhIHZOsrlRD5BSRFqRezkBaHjxs'
     ),
   })
   await api.post('/push/subscribe', sub.toJSON())

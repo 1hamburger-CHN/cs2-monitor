@@ -10,6 +10,7 @@ from app.models import WatchlistItem, User, PriceSnapshot, AlertLog
 from scheduler.crawlers import csqaq
 from scheduler.alerter import check_mode_1, check_mode_2
 from scheduler.notifier import send_notification, format_price_alert
+from scheduler.web_push import send_web_push
 
 logger = logging.getLogger(__name__)
 IMG_CACHE_FILE = Path("data/img_cache.json")
@@ -116,6 +117,8 @@ async def run_alert_check():
                 if user and user.server_chan_key_encrypted:
                     title = f"[CS2 告警] {item.market_hash_name}"
                     success = await send_notification(user.server_chan_key_encrypted, title, message)
+                    # Also send Web Push
+                    await send_web_push(title, message)
 
                 db.add(AlertLog(
                     user_id=item.user_id,
