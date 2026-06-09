@@ -1,20 +1,35 @@
-"""Watchlist tests."""
+"""Watchlist API tests."""
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
 
 
-@pytest.mark.asyncio
-async def test_watchlist_page_requires_login():
+@pytest.fixture
+async def client():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/watchlist", follow_redirects=False)
-        assert response.status_code == 302
+        yield ac
 
 
 @pytest.mark.asyncio
-async def test_dashboard_page_requires_login():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/dashboard", follow_redirects=False)
-        assert response.status_code == 302
+async def test_api_watchlist_requires_auth(client):
+    response = await client.get("/api/v1/watchlist")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_api_dashboard_requires_auth(client):
+    response = await client.get("/api/v1/dashboard")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_api_settings_requires_auth(client):
+    response = await client.get("/api/v1/settings")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_api_alerts_requires_auth(client):
+    response = await client.get("/api/v1/alerts")
+    assert response.status_code == 401

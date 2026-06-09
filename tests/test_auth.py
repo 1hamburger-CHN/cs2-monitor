@@ -1,4 +1,4 @@
-"""Auth system tests."""
+"""Auth system tests — API endpoints."""
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
@@ -12,39 +12,41 @@ async def client():
 
 
 @pytest.mark.asyncio
-async def test_register_page_loads(client):
-    response = await client.get("/register")
-    assert response.status_code == 200
-    assert "注册" in response.text
-
-
-@pytest.mark.asyncio
-async def test_login_page_loads(client):
+async def test_spa_serves_index(client):
+    """SPA catch-all serves index.html for page routes."""
     response = await client.get("/login")
     assert response.status_code == 200
-    assert "登录" in response.text
 
 
 @pytest.mark.asyncio
-async def test_register_requires_valid_invite_code(client):
-    response = await client.post("/register", data={
+async def test_api_me_requires_auth(client):
+    response = await client.get("/api/v1/me")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_api_register_invalid_invite(client):
+    response = await client.post("/api/v1/auth/register", json={
         "username": "testuser", "password": "testpass123", "invite_code": "INVALID"
     })
-    assert response.status_code == 200
-    assert "邀请码无效" in response.text
+    assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_login_wrong_password_rejected(client):
-    response = await client.post("/login", data={
+async def test_api_login_wrong_password(client):
+    response = await client.post("/api/v1/auth/login", json={
         "username": "nonexistent", "password": "wrong"
     })
-    assert response.status_code == 200
-    assert "用户名或密码错误" in response.text
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio
-async def test_protected_page_redirects(client):
-    response = await client.get("/watchlist", follow_redirects=False)
-    assert response.status_code == 302
-    assert "/login" in response.headers["location"]
+async def test_api_watchlist_requires_auth(client):
+    response = await client.get("/api/v1/watchlist")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_api_dashboard_requires_auth(client):
+    response = await client.get("/api/v1/dashboard")
+    assert response.status_code == 401
