@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api/client'
 import AppLayout from '../components/AppLayout.vue'
@@ -51,7 +51,6 @@ function goToItem(id: number) {
   router.push(`/item/${id}`)
 }
 
-import { computed } from 'vue'
 </script>
 
 <template>
