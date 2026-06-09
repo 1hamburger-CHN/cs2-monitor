@@ -7,12 +7,13 @@ Wants=mysql.service
 User=cs2monitor
 Group=cs2monitor
 WorkingDirectory=/opt/cs2-monitor
-ExecStart=/opt/cs2-monitor/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Environment=PYTHONPATH=/opt/cs2-monitor
+EnvironmentFile=/opt/cs2-monitor/.env
+ExecStart=/opt/cs2-monitor/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2
 Restart=always
 RestartSec=5
 StandardOutput=journal
 StandardError=journal
-EnvironmentFile=/opt/cs2-monitor/.env
 
 [Install]
 WantedBy=multi-user.target

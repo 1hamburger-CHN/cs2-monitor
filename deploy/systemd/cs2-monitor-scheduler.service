@@ -7,12 +7,13 @@ Wants=mysql.service
 User=cs2monitor
 Group=cs2monitor
 WorkingDirectory=/opt/cs2-monitor
+Environment=PYTHONPATH=/opt/cs2-monitor
+EnvironmentFile=/opt/cs2-monitor/.env
 ExecStart=/opt/cs2-monitor/venv/bin/python -m scheduler.main
 Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
-EnvironmentFile=/opt/cs2-monitor/.env
 
 [Install]
 WantedBy=multi-user.target

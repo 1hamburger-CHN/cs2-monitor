@@ -1,8 +1,24 @@
 cs2monitor.example.com {
+    # API + SPA reverse proxy
     reverse_proxy localhost:8000
-    encode gzip
-    header / {
+    encode gzip zstd
+
+    # Security headers
+    header {
         X-Content-Type-Options "nosniff"
         X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Cache static assets
+    @static {
+        path /assets/* /manifest.json /sw.js /icon-*.png
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    # Logs
+    log {
+        output file /var/log/caddy/cs2monitor.log
     }
 }
