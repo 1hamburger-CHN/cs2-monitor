@@ -1,6 +1,6 @@
 # CS2 饰品监控 · 状态
 
-> 2026-06-10 · live at https://skinmonitor.cloud
+> 2026-06-11 · live at https://skinmonitor.cloud
 
 ## 运行中
 

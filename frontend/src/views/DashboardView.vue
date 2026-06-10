@@ -47,6 +47,15 @@ function updateCountdown() {
   const base = new Date(data.value.last_crawl_time).getTime()
   const elapsed = Math.floor((Date.now() - base) / 1000)
   const remaining = Math.max(0, (data.value.crawl_interval_s || 300) - elapsed)
+  if (remaining <= 0) {
+    // Countdown expired — re-fetch data once to resync with scheduler
+    countdown.value = '0:00'
+    if (!timer) return // still loading
+    clearInterval(timer)
+    timer = null
+    load() // re-fetch will restart the interval
+    return
+  }
   const m = Math.floor(remaining / 60)
   const s = remaining % 60
   countdown.value = `${m}:${s.toString().padStart(2, '0')}`
@@ -92,7 +101,7 @@ function goToItem(id: number) {
     </div>
     <div class="stats">
       <StatCard :value="data.watchlist_count" label="监控中" />
-      <StatCard :value="data.portfolio_value ? '¥' + (data.portfolio_value / 1000).toFixed(1) + 'k' : '--'" label="持仓总值" trend="up" />
+      <StatCard :value="data.portfolio_value ?? 0" label="持仓总值 (元)" trend="up" />
       <StatCard :value="data.alert_count" label="今日告警" :trend="data.alert_count > 0 ? 'down' : 'neutral'" />
     </div>
     <div class="section">

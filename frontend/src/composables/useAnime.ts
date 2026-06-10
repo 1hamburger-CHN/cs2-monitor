@@ -1,19 +1,70 @@
 import anime from 'animejs'
-import { onMounted, watch, type Ref } from 'vue'
 
-/** Number counting from 0 to target (use with v-text or innerHTML binding) */
-export function animateCount(el: HTMLElement, target: number, duration = 800) {
-  anime({ targets: el, innerHTML: [0, target], round: 1, duration, easing: 'easeOutExpo' })
+/** Slot-machine scroll: numbers tumble down from 0 to target */
+export function animateCount(el: HTMLElement, target: number, duration = 1800) {
+  if (target <= 0) return
+
+  const cs = getComputedStyle(el)
+  const rowH = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.4 || 28
+
+  const spin = Array.from({ length: 12 }, () => Math.floor(Math.random() * 9) + 1)
+  // For large targets, sample ~15 numbers to keep DOM light
+  const showAll = target <= 50
+  const real = showAll
+    ? Array.from({ length: target + 1 }, (_, i) => i)
+    : (() => {
+        const tail: number[] = [0]
+        const step = Math.max(1, Math.floor(target / 15))
+        for (let v = step; v < target; v += step) tail.push(v)
+        tail.push(target)
+        return tail
+      })()
+  const strip = [...spin, ...real]
+
+  // Use bounding rect for accurate width (works on inline elements too)
+  const rect = el.getBoundingClientRect()
+  const elWidth = rect.width
+
+  const box = document.createElement('span')
+  box.style.cssText = `display:inline-block;overflow:hidden;vertical-align:baseline;height:${rowH}px;width:${elWidth}px`
+
+  const reel = document.createElement('span')
+  reel.style.cssText = 'display:inline-block'
+
+  strip.forEach((n) => {
+    const cell = document.createElement('div')
+    cell.style.cssText = `height:${rowH}px;line-height:${rowH}px;text-align:center;font:${cs.font};color:${cs.color}`
+    cell.textContent = String(n)
+    reel.appendChild(cell)
+  })
+
+  box.appendChild(reel)
+  el.replaceWith(box)
+
+  const startIdx = spin.length
+  const endIdx = strip.length - 1
+  const totalRows = endIdx - startIdx
+
+  anime({
+    targets: reel,
+    translateY: [-(startIdx * rowH), -(endIdx * rowH)],
+    duration: duration + totalRows * 80,
+    easing: 'easeOutQuad',
+    complete: () => {
+      box.replaceWith(el)
+      el.textContent = String(target)
+    },
+  })
 }
 
-/** Staggered list entrance — call in onMounted */
+/** Staggered list entrance */
 export function animateListEntrance(selector: string) {
   anime({
     targets: selector,
-    translateX: [-16, 0],
+    translateX: [-20, 0],
     opacity: [0, 1],
-    delay: anime.stagger(40),
-    duration: 280,
+    delay: anime.stagger(60),
+    duration: 400,
     easing: 'easeOutQuad',
   })
 }
@@ -36,30 +87,7 @@ export function animatePulse(selector: string) {
   })
 }
 
-/** Page enter transition — call in onMounted of layout */
+/** Page enter transition */
 export function animatePageEnter(el: HTMLElement) {
   anime({ targets: el, opacity: [0, 1], translateY: [10, 0], duration: 220, easing: 'easeOutQuad' })
-}
-
-// ── Vue composables ──
-
-/** Reactively animate a number displayed in a DOM element */
-export function useCountAnimation(
-  targetRef: Ref<HTMLElement | undefined>,
-  value: Ref<number>,
-) {
-  onMounted(() => {
-    watch(value, (v) => {
-      if (targetRef.value && v > 0) animateCount(targetRef.value, v, 600)
-    }, { immediate: true })
-  })
-}
-
-/** Trigger list entrance animation after data loads */
-export function useListEntrance(selector: string, trigger: Ref<boolean>) {
-  watch(trigger, (loaded) => {
-    if (loaded) {
-      requestAnimationFrame(() => animateListEntrance(selector))
-    }
-  })
 }

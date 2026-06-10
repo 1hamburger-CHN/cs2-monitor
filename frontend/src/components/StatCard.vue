@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { animateCount } from '../composables/useAnime'
 
 const props = defineProps<{ value: string | number; label: string; trend?: 'up' | 'down' | 'neutral' }>()
 
 const valueRef = ref<HTMLDivElement>()
 
-onMounted(() => {
-  const num = typeof props.value === 'number' ? props.value : parseFloat(String(props.value))
-  if (valueRef.value && !isNaN(num)) {
-    animateCount(valueRef.value, num, 700)
+let animated = false
+watch(() => props.value, (val) => {
+  const num = typeof val === 'number' ? val : parseFloat(String(val))
+  if (!valueRef.value || isNaN(num) || num <= 0) return
+  if (!animated && num > 0) {
+    animated = true
+    valueRef.value.textContent = '0'
+    animateCount(valueRef.value, num, 1000)
   }
 })
 </script>
