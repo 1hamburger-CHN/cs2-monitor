@@ -135,6 +135,8 @@ async def api_dashboard(user: User = Depends(api_login_required), db: AsyncSessi
     items = items_result.scalars().all()
 
     item_list = []
+    portfolio_value = 0.0
+    has_any_price = False
     for item in items:
         price_result = await db.execute(
             select(PriceSnapshot.price, PriceSnapshot.platform)
@@ -152,6 +154,9 @@ async def api_dashboard(user: User = Depends(api_login_required), db: AsyncSessi
             "platform": latest[1] if latest else None,
             "img_url": _get_img_url(item.market_hash_name),
         })
+        if latest:
+            has_any_price = True
+            portfolio_value += latest[0] * (item.quantity or 1)
 
     # Last crawl time for countdown timer
     last_crawl = (await db.execute(
@@ -161,7 +166,7 @@ async def api_dashboard(user: User = Depends(api_login_required), db: AsyncSessi
     return {
         "watchlist_count": wc,
         "alert_count": ac,
-        "portfolio_value": None,
+        "portfolio_value": round(portfolio_value, 2) if has_any_price else None,
         "last_crawl_time": last_crawl.isoformat() + "Z" if last_crawl else None,
         "crawl_interval_s": settings.crawler_interval_seconds,
         "items": item_list,
