@@ -1,30 +1,29 @@
-const CACHE_NAME = 'cs2-monitor-v2'
-const SHELL = ['/']
+const CACHE_NAME = 'cs2-monitor-v3'
 const API_CACHE = 'cs2-api-v1'
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL))
-  )
-  self.skipWaiting()
-})
+self.addEventListener('install', (event) => { self.skipWaiting() })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== API_CACHE).map((k) => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   )
-  self.clients.claim()
 })
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirst(event.request))
-  } else {
-    event.respondWith(cacheFirst(event.request))
+    return
   }
+  // HTML pages — network first, always get latest index.html
+  if (event.request.mode === 'navigate') {
+    event.respondWith(networkFirstNav(event.request))
+    return
+  }
+  // Static assets — cache first, filenames are hashed so never stale
+  event.respondWith(cacheFirst(event.request))
 })
 
 async function networkFirst(request) {
@@ -36,6 +35,18 @@ async function networkFirst(request) {
   } catch {
     const cached = await caches.match(request)
     return cached || new Response('{}', { headers: { 'Content-Type': 'application/json' } })
+  }
+}
+
+async function networkFirstNav(request) {
+  try {
+    const response = await fetch(request)
+    const cache = await caches.open(CACHE_NAME)
+    cache.put(request, response.clone())
+    return response
+  } catch {
+    const cached = await caches.match(request)
+    return cached || Response.error()
   }
 }
 
@@ -56,18 +67,13 @@ self.addEventListener('push', (event) => {
   const data = event.data?.json() || { title: 'CS2 Monitor', body: '价格更新' }
   event.waitUntil(
     self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      vibrate: [200, 100, 200],
-      tag: data.tag || 'cs2-alert',
+      body: data.body, icon: '/icon-192.png', badge: '/icon-192.png',
+      vibrate: [200, 100, 200], tag: data.tag || 'cs2-alert',
     })
   )
 })
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  event.waitUntil(
-    clients.openWindow('/alerts')
-  )
+  event.waitUntil(clients.openWindow('/alerts'))
 })

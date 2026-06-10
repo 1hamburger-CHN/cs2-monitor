@@ -162,7 +162,7 @@ async def api_dashboard(user: User = Depends(api_login_required), db: AsyncSessi
         "watchlist_count": wc,
         "alert_count": ac,
         "portfolio_value": None,
-        "last_crawl_time": last_crawl.isoformat() if last_crawl else None,
+        "last_crawl_time": last_crawl.isoformat() + "Z" if last_crawl else None,
         "crawl_interval_s": settings.crawler_interval_seconds,
         "items": item_list,
     }
