@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api/client'
+import { animateListEntrance, animatePageEnter } from '../composables/useAnime'
 import AppLayout from '../components/AppLayout.vue'
 import StatCard from '../components/StatCard.vue'
 import WatchlistItem from '../components/WatchlistItem.vue'
@@ -10,6 +11,8 @@ interface DashboardData {
   watchlist_count: number
   alert_count: number
   portfolio_value: number | null
+  last_crawl_time: string | null
+  crawl_interval_s: number
   items: Array<{
     id: number
     market_hash_name: string
@@ -23,21 +26,41 @@ interface DashboardData {
 }
 
 const router = useRouter()
-const data = ref<DashboardData>({ watchlist_count: 0, alert_count: 0, portfolio_value: null, items: [] })
+const data = ref<DashboardData>({
+  watchlist_count: 0, alert_count: 0, portfolio_value: null,
+  last_crawl_time: null, crawl_interval_s: 300, items: []
+})
 const loading = ref(true)
-const now = new Date()
+const countdown = ref('--')
+let timer: ReturnType<typeof setInterval> | null = null
 
 const greeting = computed(() => {
-  const h = now.getHours()
+  const h = new Date().getHours()
   if (h < 6) return '夜深了 🌙'
   if (h < 12) return '早上好 👋'
   if (h < 18) return '下午好 ☀️'
   return '晚上好 🌆'
 })
 
+function updateCountdown() {
+  if (!data.value.last_crawl_time) { countdown.value = '等待首次刷新'; return }
+  const last = new Date(data.value.last_crawl_time).getTime()
+  const next = last + data.value.crawl_interval_s * 1000
+  const remaining = Math.max(0, Math.floor((next - Date.now()) / 1000))
+  const m = Math.floor(remaining / 60)
+  const s = remaining % 60
+  countdown.value = `${m}:${s.toString().padStart(2, '0')}`
+}
+
+function startCountdown() {
+  updateCountdown()
+  timer = setInterval(updateCountdown, 1000)
+}
+
 async function load() {
   try {
     data.value = await api.get<DashboardData>('/dashboard')
+    startCountdown()
   } catch (e) {
     console.error(e)
   } finally {
@@ -45,20 +68,31 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  nextTick(() => animatePageEnter(document.querySelector('.dashboard-view') as HTMLElement))
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
+
+watch(() => data.value.items.length, (n) => {
+  if (n > 0) nextTick(() => animateListEntrance('.watchlist-item'))
+})
 
 function goToItem(id: number) {
   router.push(`/item/${id}`)
 }
-
 </script>
 
 <template>
   <AppLayout>
+    <div class="dashboard-view">
     <div class="header">
       <div class="greeting">{{ greeting }}</div>
       <div class="title">CS2 Monitor</div>
-      <div class="subtitle">● 实时监控中 · 5分钟刷新</div>
+      <div class="subtitle">● 实时监控中 · 下次刷新 <span class="countdown">{{ countdown }}</span></div>
     </div>
     <div class="stats">
       <StatCard :value="data.watchlist_count" label="监控中" />
@@ -85,6 +119,7 @@ function goToItem(id: number) {
         @click="goToItem(item.id)"
       />
     </div>
+    </div>
   </AppLayout>
 </template>
 
@@ -93,6 +128,7 @@ function goToItem(id: number) {
 .greeting { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
 .title { font-size: 24px; font-weight: 700; color: var(--text); font-family: var(--font-mono); }
 .subtitle { font-size: 12px; color: var(--green); margin-top: 4px; font-family: var(--font-mono); }
+.countdown { color: var(--accent); font-weight: 600; }
 .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0 20px; margin-bottom: 20px; }
 .section { padding: 0 20px; margin-bottom: 12px; }
 .section-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600; }

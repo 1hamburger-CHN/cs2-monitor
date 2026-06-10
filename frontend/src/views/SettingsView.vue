@@ -26,8 +26,12 @@ async function enablePush() {
   pushLoading.value = true
   pushMsg.value = ''
   try {
-    const ok = await push.subscribe()
-    pushMsg.value = ok ? '通知已开启' : '通知开启失败'
+    const result = await push.subscribe()
+    if (result === true) {
+      pushMsg.value = '通知已开启'
+    } else {
+      pushMsg.value = typeof result === 'string' ? result : '通知开启失败'
+    }
   } catch (e: any) {
     pushMsg.value = e.message || '通知开启失败'
   } finally {

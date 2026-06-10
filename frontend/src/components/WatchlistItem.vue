@@ -18,7 +18,7 @@ const emit = defineEmits<{ click: []; add: [] }>()
 </script>
 
 <template>
-  <div class="item" :class="{ clickable }" @click="clickable && emit('click')">
+  <div class="item watchlist-item" :class="{ clickable }" @click="clickable && emit('click')">
     <img v-if="imgUrl" :src="imgUrl" width="48" height="48" alt="" class="item-img" loading="lazy"
       @error="(e: Event) => (e.target as HTMLImageElement).style.display = 'none'" />
     <div v-else class="item-img-placeholder"></div>

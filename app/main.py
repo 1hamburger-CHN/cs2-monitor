@@ -28,8 +28,23 @@ spa_dir = Path(__file__).parent / "static" / "spa"
 spa_built = spa_dir.is_dir()
 
 if spa_built:
-    # Mount SPA static files (handles MIME types correctly)
+    index_html = spa_dir / "index.html"
+
+    # Mount SPA static files (JS/CSS/images)
     app.mount("/", StaticFiles(directory=str(spa_dir), html=True), name="spa")
+
+    # Middleware: catch 404 on non-API paths → serve index.html (SPA fallback)
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from fastapi.responses import FileResponse
+
+    class SpaFallbackMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            response = await call_next(request)
+            if response.status_code == 404 and not request.url.path.startswith("/api/"):
+                return FileResponse(index_html)
+            return response
+
+    app.add_middleware(SpaFallbackMiddleware)
 
 else:
     # Fallback: Jinja2 pages (when SPA not built)

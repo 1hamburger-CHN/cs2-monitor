@@ -9,7 +9,7 @@ services:
     depends_on: {mysql: {condition: service_healthy}}
     volumes: ["./data:/app/data"]
   scheduler:
-    build: .
+    image: cs2-monitor-web:latest
     container_name: cs2monitor-scheduler
     restart: unless-stopped
     command: python -m scheduler.main

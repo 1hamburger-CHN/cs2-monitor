@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from pydantic import BaseModel
 from passlib.context import CryptContext
+from app.config import settings
 from app.database import get_db
 from app.routes.deps import get_current_user, api_login_required
 from app.models import User, WatchlistItem, PriceSnapshot, AlertLog, InviteCode
@@ -152,10 +153,17 @@ async def api_dashboard(user: User = Depends(api_login_required), db: AsyncSessi
             "img_url": _get_img_url(item.market_hash_name),
         })
 
+    # Last crawl time for countdown timer
+    last_crawl = (await db.execute(
+        select(func.max(PriceSnapshot.timestamp))
+    )).scalar()
+
     return {
         "watchlist_count": wc,
         "alert_count": ac,
         "portfolio_value": None,
+        "last_crawl_time": last_crawl.isoformat() if last_crawl else None,
+        "crawl_interval_s": settings.crawler_interval_seconds,
         "items": item_list,
     }
 

@@ -1,16 +1,25 @@
 <script setup lang="ts">
-defineProps<{
+import { onMounted } from 'vue'
+import { animatePulse } from '../composables/useAnime'
+
+const props = defineProps<{
   time: string
   message: string
   type: 'trigger' | 'daily'
 }>()
+
+onMounted(() => {
+  if (props.type === 'trigger') {
+    requestAnimationFrame(() => animatePulse('.alert-badge-pulse'))
+  }
+})
 </script>
 
 <template>
-  <div class="alert" :class="{ trigger: type === 'trigger', daily: type === 'daily' }">
+  <div class="alert alert-card" :class="{ trigger: type === 'trigger', daily: type === 'daily' }">
     <div class="time">{{ time }}</div>
     <div class="msg" v-html="message"></div>
-    <span v-if="type === 'trigger'" class="badge badge-alert">触发告警</span>
+    <span v-if="type === 'trigger'" class="badge badge-alert alert-badge-pulse">触发告警</span>
     <span v-else class="badge badge-info">日报</span>
   </div>
 </template>

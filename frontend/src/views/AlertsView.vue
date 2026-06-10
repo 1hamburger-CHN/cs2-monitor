@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { api } from '../api/client'
+import { animateListEntrance, animatePageEnter } from '../composables/useAnime'
 import AppLayout from '../components/AppLayout.vue'
 import AlertCard from '../components/AlertCard.vue'
 
@@ -33,14 +34,22 @@ function formatTime(iso: string): string {
 }
 
 function isTrigger(item: AlertItem): boolean {
-  return item.rule_type !== 0 // 0 = daily report
+  return item.rule_type !== 0
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  nextTick(() => animatePageEnter(document.querySelector('.alerts-view') as HTMLElement))
+})
+
+watch(() => data.value.items.length, (n) => {
+  if (n > 0) nextTick(() => animateListEntrance('.alert-card'))
+})
 </script>
 
 <template>
   <AppLayout>
+    <div class="alerts-view">
     <div class="header">
       <div class="title">告警中心</div>
       <div class="subtitle">
@@ -56,6 +65,7 @@ onMounted(load)
         :message="item.message"
         :type="isTrigger(item) ? 'trigger' : 'daily'"
       />
+    </div>
     </div>
   </AppLayout>
 </template>

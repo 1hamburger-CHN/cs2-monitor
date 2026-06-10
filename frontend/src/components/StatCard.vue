@@ -1,9 +1,21 @@
 <script setup lang="ts">
-defineProps<{ value: string | number; label: string; trend?: 'up' | 'down' | 'neutral' }>()
+import { ref, onMounted } from 'vue'
+import { animateCount } from '../composables/useAnime'
+
+const props = defineProps<{ value: string | number; label: string; trend?: 'up' | 'down' | 'neutral' }>()
+
+const valueRef = ref<HTMLDivElement>()
+
+onMounted(() => {
+  const num = typeof props.value === 'number' ? props.value : parseFloat(String(props.value))
+  if (valueRef.value && !isNaN(num)) {
+    animateCount(valueRef.value, num, 700)
+  }
+})
 </script>
 <template>
   <div class="stat-card">
-    <div class="value" :class="{ up: trend === 'up', down: trend === 'down' }">{{ value }}</div>
+    <div ref="valueRef" class="value" :class="{ up: trend === 'up', down: trend === 'down' }">{{ value }}</div>
     <div class="label">{{ label }}</div>
   </div>
 </template>
