@@ -47,6 +47,11 @@ function updateCountdown() {
   const last = new Date(data.value.last_crawl_time).getTime()
   const next = last + data.value.crawl_interval_s * 1000
   const remaining = Math.max(0, Math.floor((next - Date.now()) / 1000))
+  if (remaining <= 0) {
+    countdown.value = '刷新中...'
+    load()
+    return
+  }
   const m = Math.floor(remaining / 60)
   const s = remaining % 60
   countdown.value = `${m}:${s.toString().padStart(2, '0')}`
