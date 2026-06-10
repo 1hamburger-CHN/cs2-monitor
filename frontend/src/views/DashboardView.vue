@@ -32,6 +32,7 @@ const data = ref<DashboardData>({
 })
 const loading = ref(true)
 const countdown = ref('--')
+const fetching = ref(false)
 let timer: ReturnType<typeof setInterval> | null = null
 
 const greeting = computed(() => {
@@ -43,12 +44,14 @@ const greeting = computed(() => {
 })
 
 function updateCountdown() {
+  if (fetching.value) return
   if (!data.value.last_crawl_time) { countdown.value = '等待首次刷新'; return }
   const last = new Date(data.value.last_crawl_time).getTime()
   const next = last + data.value.crawl_interval_s * 1000
   const remaining = Math.max(0, Math.floor((next - Date.now()) / 1000))
   if (remaining <= 0) {
     countdown.value = '刷新中...'
+    fetching.value = true
     load()
     return
   }
@@ -65,8 +68,10 @@ function startCountdown() {
 async function load() {
   try {
     data.value = await api.get<DashboardData>('/dashboard')
+    fetching.value = false
     startCountdown()
   } catch (e) {
+    fetching.value = false
     console.error(e)
   } finally {
     loading.value = false

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cs2-monitor-v1'
+const CACHE_NAME = 'cs2-monitor-v2'
 const SHELL = ['/']
 const API_CACHE = 'cs2-api-v1'
 
